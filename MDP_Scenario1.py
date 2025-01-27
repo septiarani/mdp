@@ -159,7 +159,7 @@ class MDP_Scenario1(MDP):
         # print(sum_rewards)
         return sum_rewards
 
-    def value_iteration(mdp, epsilon=0.001):
+    def value_iteration(self, epsilon=0.001):
         # initialize V with 0
         V = {mdp.get_state_hash(s): 0 for s in mdp.get_state_space()}
         # print(mdp.discount)
@@ -193,11 +193,95 @@ class MDP_Scenario1(MDP):
                 delta = max(delta, abs(v - V[s_hash]))
             #print(delta)
             if delta < epsilon:
+                self.delta = delta
                 break
         return V
     
-    def get_policy(self):
-        pass
+    def get_policy(self, V):
+        # pass
+        # initialize P with None
+        P = {mdp.get_state_hash(s): None for s in mdp.get_state_space()}
+        for s in mdp.get_state_space():
+            s_hash = mdp.get_state_hash(s)
+            v = V[s_hash]
+            # for R(s, a)
+            # V[s_hash] = max([sum([mdp.get_transition_probability(s, a, s_prime) * (mdp.get_reward(s, a) + mdp.discount * V[mdp.get_state_hash(s_prime)]) for s_prime in mdp.get_state_space()]) for a in mdp.get_actions()])
+            max_value = float('-inf')
+            best_action = None
+            for a in mdp.get_actions():
+                value = sum([mdp.get_transition_probability(s, a, s_prime) * 
+                            (mdp.get_reward(s, a) + mdp.discount * V[mdp.get_state_hash(s_prime)]) 
+                            for s_prime in mdp.get_state_space()])
+                if value > max_value:
+                    max_value = value
+                    best_action = a
+            V[s_hash] = max_value
+            P[s_hash] = best_action
+            delta = max(self.delta, abs(v - V[s_hash]))
+        P['Terminate'] = None
+        # self.P = P
+        # print("delta: ", delta)
+        # print("V: ", V)
+        # print("P: ", P)
+        return P
+
+    def get_trajectory(self, init_state, P):
+        # init_state = self.init_state
+        # P = self.P
+        trajectory = []
+        state = init_state
+        max_steps = 10
+        t = 0
+        while ((t < max_steps)):
+            s_hash = mdp.get_state_hash(state)
+            action = P[s_hash]
+            trajectory.append((state, action))
+            # To get the full trajectory, we need to know the next_state after execute the (state, action)
+            next_state = mdp.get_next_state(state, action)
+            if (next_state == "Terminate"):
+                trajectory.append((next_state, "None"))
+                break
+            state = tuple(next_state)
+            t = t + 1
+        # print(trajectory)
+        return trajectory
+        
+    def get_next_state(self, state, action):
+        # intended to return the next_state, given (state, action) pair
+        next_state = list(state)
+        # Condition 1 - act1 "Open the door": 
+        # fact1 "The door is closed" becomes False after the action
+        # fact2 "The door is open" becomes True after the action
+        # other facts stay the same
+        if (action == "act1"):
+            next_state[0] = False
+            next_state[1] = True
+        # Condition 2 - act2 "Move to the room": 
+        # fact5 "The suitcase is inside the room" becomes True after the action
+        # fact6 "The suitcase is outside the room" becomes False after the action
+        # other facts stay the same
+        elif (action == "act2"):
+            next_state[4] = True
+            next_state[5] = False
+        # Condition 3 - act3 "Pick up the suitcase": 
+        # fact3 "The robot is holding the suitcase" becomes True after the action
+        # fact4 "The robot is not holding the suitcase" becomes False after the action
+        # other facts stay the same
+        elif (action == "act3"):
+            next_state[2] = True
+            next_state[3] = False
+        # Condition 4 - act4 "Dropoff the suitcase inside the room": 
+        # fact3 "The robot is holding the suitcase" is True, then becomes False after the action
+        # fact4 "The robot is not holding the suitcase" is False, then becomes True after the action
+        # other facts stay the same
+        elif (action == "act4"):
+            next_state[2] = False
+            next_state[3] = True
+        # Condition 5 - act5 "Exit the task": 
+        # enter to absorber state "Terminate" after the action
+        elif (action == "act5"):
+            next_state = "Terminate"
+        return next_state
 
     def compare_trajectories(self):
         pass
@@ -231,19 +315,35 @@ if __name__ == "__main__":
     # print(mdp.get_reward(state, action))
 
     # Check the transition probability
-    print("\nList of (s,a,s_prime) that has probability equal 1:")
-    n = 0
-    for a in mdp.get_actions():
-        for s in mdp.get_state_space():
-            for s_prime in mdp.get_state_space():
-                if mdp.get_transition_probability(s, a, s_prime) == 1 :
-                    n = n + 1
-                    print("#", n)
-                    print("s: ", mdp.decode_state(s))
-                    print("a: ", mdp.decode_actions(a))
-                    print("s_prime: ", mdp.decode_state(s_prime))
+    # print("\nList of (s,a,s_prime) that has probability equal 1:")
+    # n = 0
+    # for a in mdp.get_actions():
+    #     for s in mdp.get_state_space():
+    #         for s_prime in mdp.get_state_space():
+    #             if mdp.get_transition_probability(s, a, s_prime) == 1 :
+    #                 n = n + 1
+    #                 print("#", n)
+    #                 print("s: ", mdp.decode_state(s))
+    #                 print("a: ", mdp.decode_actions(a))
+    #                 print("s_prime: ", mdp.decode_state(s_prime))
 
     # Call value iteration
     V = mdp.value_iteration()
-    print("\nValue iteration calculation result:")
-    print(V)
+    # print("\nValue iteration calculation result:")
+    # print(V)
+
+    # Call get_policy
+    P = mdp.get_policy(V)
+    # print("\nThe policy from user-defined matrix:")
+    # print(P)
+
+    # Call get_trajectory
+    init_state = mdp.get_init_state()
+    T = mdp.get_trajectory(init_state, P)
+    print("\nThe trajectory (state-action pairs) from user-defined matrix:")
+    # print(T)
+    T_length = len(T)
+    for i in range(T_length):
+        state = T[i][0]
+        action = T[i][1]
+        print(i+1, mdp.decode_state(state), " -> ", mdp.decode_actions(action))
