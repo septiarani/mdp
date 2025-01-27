@@ -6,8 +6,13 @@ class MDP_Scenario1(MDP):
         # constructor method initializes an instance of the 'MDP' class
         print('initializing..')
         self.create_state_space()
-        # init_state: [0]The door is closed (T); [1]The door is open (F); [2]The robot is holding the suitcase (F);
-        # [3]The robot is not holding the suitcase (T); [4]The suitcase is inside the room (F); [5]The suitcase is outside the room (T).
+        # init_state: 
+        # [0]The door is closed (T); 
+        # [1]The door is open (F); 
+        # [2]The robot is holding the suitcase (F);
+        # [3]The robot is not holding the suitcase (T); 
+        # [4]The suitcase is inside the room (F); 
+        # [5]The suitcase is outside the room (T).
         self.init_state = (True, False, False, True, False, True)
         self.goal_states = [(True, False, True, False, False, True)]
         self.discount = 0.99
@@ -48,26 +53,52 @@ class MDP_Scenario1(MDP):
             # fact1 "The door is closed" becomes False after the action
             # fact2 "The door is open" becomes True after the action
             # other facts stay the same
-            ((action == "act1") and (next_state[0] == False) and (next_state[1] == True) and (state[2] == next_state[2]) and (state[3] == next_state[3]) and (state[4] == next_state[4]) and (state[5] == next_state[5]))
+            ((action == "act1") and 
+             (next_state[0] == False) and (next_state[1] == True) and 
+             (state[2] == next_state[2]) and (state[3] == next_state[3]) and 
+             (state[4] == next_state[4]) and (state[5] == next_state[5]))
             # Condition 2 - act2 "Move to the room":
             # fact1 "The door is closed" is False, and still False after the action
             # fact2 "The door is open" is True, and still True after the action
-            # fact5 "The suitcase is inside the room" becomes True after the action
-            # fact6 "The suitcase is outside the room" becomes False after the action
+            # If the robot is holding the suitcase (fact3 True, fact4 False):
+                # fact5 "The suitcase is inside the room" becomes True after the action
+                # fact6 "The suitcase is outside the room" becomes False after the action
+            # If the robot is not holding the suitcase (fact3 False, fact4 True):
+                # fact5 "The suitcase is inside the room" is False, and still False after the action
+                # fact6 "The suitcase is outside the room" is True, and still True after the action
             # other facts stay the same
-            or ((action == "act2") and (state[0] == False) and (next_state[0] == False) and (state[1] == True) and (next_state[1] == True) and (next_state[4] == True) and (next_state[5] == False) and (state[2] == next_state[2]) and (state[3] == next_state[3]))
+            or ((action == "act2") and 
+                (state[0] == False) and (next_state[0] == False) and 
+                (state[1] == True) and (next_state[1] == True) and 
+                (state[2] == True) and (next_state[2] == True) and
+                (state[3] == False) and (next_state[3] == False) and
+                (next_state[4] == True) and (next_state[5] == False))
+            or ((action == "act2") and 
+                (state[0] == False) and (next_state[0] == False) and 
+                (state[1] == True) and (next_state[1] == True) and 
+                (state[2] == False) and (next_state[2] == False) and
+                (state[3] == True) and (next_state[3] == True) and
+                (next_state[4] == False) and (next_state[5] == True))
             # Condition 3 - act3 "Pick up the suitcase": 
             # fact3 "The robot is holding the suitcase" becomes True after the action
             # fact4 "The robot is not holding the suitcase" becomes False after the action
             # other facts stay the same
-            or ((action == "act3") and (next_state[2] == True) and (next_state[3] == False) and (state[0] == next_state[0]) and (state[1] == next_state[1]) and (state[4] == next_state[4]) and (state[5] == next_state[5]))
+            or ((action == "act3") and 
+                (next_state[2] == True) and (next_state[3] == False) and 
+                (state[0] == next_state[0]) and (state[1] == next_state[1]) and 
+                (state[4] == next_state[4]) and (state[5] == next_state[5]))
             # Condition 4 - act4 "Dropoff the suitcase inside the room": 
             # fact3 "The robot is holding the suitcase" is True, then becomes False after the action
             # fact4 "The robot is not holding the suitcase" is False, then becomes True after the action
             # fact5 "The suitcase is inside the room" is True, and still True after the action
             # fact6 "The suitcase is outside the room" is False, and still False after the action
             # other facts stay the same
-            or ((action == "act4") and (state[2] == True) and (next_state[2] == False) and (state[3] == False) and (next_state[3] == True) and (state[4] == True) and (next_state[4] == True) and (state[5] == False) and (next_state[5] == False) and (state[0] == next_state[0]) and (state[1] == next_state[1]))
+            or ((action == "act4") and 
+                (state[2] == True) and (next_state[2] == False) and 
+                (state[3] == False) and (next_state[3] == True) and 
+                (state[4] == True) and (next_state[4] == True) and 
+                (state[5] == False) and (next_state[5] == False) and 
+                (state[0] == next_state[0]) and (state[1] == next_state[1]))
             # Condition 5 - act5 "Exit the task": 
             # enter to absorber state "Terminate" after the action
             or ((action == "act5") and (next_state == "Terminate"))):
@@ -191,7 +222,7 @@ class MDP_Scenario1(MDP):
                 # for R(s, a, s')
                 # V[s_hash] = max([mdp.discount * sum([mdp.get_transition_probability(s, a, s_prime) * (mdp.get_reward(s, a, s_prime) + V[mdp.get_state_hash(s_prime)]) for s_prime in mdp.get_state_space()]) for a in mdp.get_actions()])
                 delta = max(delta, abs(v - V[s_hash]))
-            #print(delta)
+            # print(delta)
             if delta < epsilon:
                 self.delta = delta
                 break
@@ -212,7 +243,7 @@ class MDP_Scenario1(MDP):
                 value = sum([mdp.get_transition_probability(s, a, s_prime) * 
                             (mdp.get_reward(s, a) + mdp.discount * V[mdp.get_state_hash(s_prime)]) 
                             for s_prime in mdp.get_state_space()])
-                if value > max_value:
+                if value >= max_value:
                     max_value = value
                     best_action = a
             V[s_hash] = max_value
@@ -256,13 +287,29 @@ class MDP_Scenario1(MDP):
         if (action == "act1"):
             next_state[0] = False
             next_state[1] = True
-        # Condition 2 - act2 "Move to the room": 
-        # fact5 "The suitcase is inside the room" becomes True after the action
-        # fact6 "The suitcase is outside the room" becomes False after the action
+        # ==========
+        # # Condition 2 - act2 "Move to the room": 
+        # # fact5 "The suitcase is inside the room" becomes True after the action
+        # # fact6 "The suitcase is outside the room" becomes False after the action
+        # # other facts stay the same
+        # elif (action == "act2"):
+        #     next_state[4] = True
+        #     next_state[5] = False
+        # ==========
+        # Condition 2 - act2 "Move to the room":
+        # If the robot is holding the suitcase (fact3 True, fact4 False):
+            # fact5 "The suitcase is inside the room" becomes True after the action
+            # fact6 "The suitcase is outside the room" becomes False after the action
+        # If the robot is not holding the suitcase (fact3 False, fact4 True):
+            # fact5 "The suitcase is inside the room" is False, and still False after the action
+            # fact6 "The suitcase is outside the room" is True, and still True after the action
         # other facts stay the same
-        elif (action == "act2"):
+        elif ((action == "act2") and (state[2] == True) and (state[3] == False)):
             next_state[4] = True
             next_state[5] = False
+        # elif ((action == "act2") and (state[2] == False) and (state[3] == True)):
+        #     next_state[4] = False
+        #     next_state[5] = True
         # Condition 3 - act3 "Pick up the suitcase": 
         # fact3 "The robot is holding the suitcase" becomes True after the action
         # fact4 "The robot is not holding the suitcase" becomes False after the action
