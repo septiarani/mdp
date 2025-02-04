@@ -16,6 +16,7 @@ class MDP_Scenario1(MDP):
         self.init_state = (True, False, False, True, False, True)
         self.goal_states = [(True, False, True, False, False, True)]
         self.discount = 0.99
+        # self.discount = 0.9
 
     def get_state_space(self):
         return self.state_space # state space represents all possible states the system can be in
@@ -272,15 +273,77 @@ class MDP_Scenario1(MDP):
                 if value >= max_value:
                     max_value = value
                     best_action = a
+                # How if there are multiple actions that give max expected value?
+                # Currently, select the action in the latest order
+                # Next, should be able to get all possible trajectories
             V[s_hash] = max_value
             P[s_hash] = best_action
             delta = max(self.delta, abs(v - V[s_hash]))
-        P['Terminate'] = None
+        P['Terminate'] = "None"
         # self.P = P
         # print("delta: ", delta)
         # print("V: ", V)
         # print("P: ", P)
         return P
+
+    def check_possible_policies(self, V, rewards_matrix, T_video):
+        print("Checking the policy:")
+        result = "-"
+        continue_check = True
+        # initialize P with None
+        P = {mdp.get_state_hash(s): None for s in mdp.get_state_space()}
+        i = 0
+        for sa in T_video:
+            s_video = sa[0]
+            a_video = sa[1]
+            # print(s_video, a_video)
+            for s in mdp.get_state_space():
+                if (s_video == s) and (continue_check == True):
+                    # print(s_video, a_video)
+                    i = i + 1
+                    print(i, " Correct (s,a): ", mdp.decode_state(s_video), " -> ", mdp.decode_actions(a_video))
+                    s_hash = mdp.get_state_hash(s)
+                    v = V[s_hash]
+                    max_value = float('-inf')
+                    list_best_action = []
+                    if s_video != "Terminate":
+                        # Get max expected value from all possible actions
+                        for a in mdp.get_actions():
+                            value = sum([mdp.get_transition_probability(s, a, s_prime) * 
+                                        (mdp.get_reward(s, a, rewards_matrix) + mdp.discount * V[mdp.get_state_hash(s_prime)]) 
+                                        for s_prime in mdp.get_state_space()])
+                            if value >= max_value:
+                                max_value = value
+                        # Get all actions that return max expected value
+                        for a in mdp.get_actions():
+                            value = sum([mdp.get_transition_probability(s, a, s_prime) * 
+                                        (mdp.get_reward(s, a, rewards_matrix) + mdp.discount * V[mdp.get_state_hash(s_prime)]) 
+                                        for s_prime in mdp.get_state_space()])
+                            if value == max_value:
+                                list_best_action.append(a)
+                    else:
+                        list_best_action.append("None")
+                    print("List best actions in s based on value iteration: ")
+                    for best_action in (list_best_action):
+                        print(mdp.decode_actions(best_action))
+                    # Check if the current action to be done (a_video) is in the list (list_best_action)
+                    # 1. It is not, then it is misspecified.
+                    # 2. It is, but there is another action with the same value, then underspecified.
+                    # 3. It is, and the only one, then correct specification.
+                    # Current action is not found
+                    if list_best_action.count(a_video) == 0: 
+                        result = "misspecified"
+                        continue_check = False
+                    # Current action is found, but there is another action with the same value
+                    elif (list_best_action.count(a_video) > 0) and (len(list_best_action) >=2):
+                        result = "underspecified"
+                        continue_check = True
+                    # Condition for correct specification
+                    elif (list_best_action.count(a_video) > 0) and (len(list_best_action) == 1) and (a_video == "None") and (result != "underspecified"):
+                        result = "correct"
+                        continue_check = False
+                    print("Current result: ", result)
+        return result
 
     def get_trajectory(self, init_state, P):
         # init_state = self.init_state
@@ -435,6 +498,16 @@ if __name__ == "__main__":
     file_title = 'Goals vs Rewards Survey 3.0 - Specify Objective - Prolific_December 4, 2024_18.25.xlsx'
     mdp.read_rewards_excel_all_lines(file_title)
     rewards_matrix_all = mdp.get_rewards_matrix_all()
+    
+    # Define video trajectory
+    T_video = [((True, False, False, True, False, True), 'act3'), ((True, False, True, False, False, True), 'act1'), ((False, True, True, False, False, True), 'act2'), ((False, True, True, False, True, False), 'act4'), ((False, True, False, True, True, False), 'act5'), ('Terminate', 'None')]
+    # T_video = [((True, False, False, True, False, True), 'act3'), ((True, False, True, False, False, True), 'act5'), ('Terminate', 'None')]
+    print("The trajectory (state-action pairs) from the video:")
+    T_video_length = len(T_video)
+    for j in range(T_video_length):
+        state = T_video[j][0]
+        action = T_video[j][1]
+        print(j+1, mdp.decode_state(state), " -> ", mdp.decode_actions(action))
     idx = 0
     for rewards in rewards_matrix_all:
         idx = idx + 1
@@ -454,7 +527,7 @@ if __name__ == "__main__":
             init_state = mdp.get_init_state()
             T = mdp.get_trajectory(init_state, P)
             # print(T)
-            print("The trajectory (state-action pairs) from user-defined matrix:")
+            print("Possible trajectory (state-action pairs) from user-defined matrix:")
             T_length = len(T)
             for i in range(T_length):
                 state = T[i][0]
@@ -462,7 +535,16 @@ if __name__ == "__main__":
                 print(i+1, mdp.decode_state(state), " -> ", mdp.decode_actions(action))
 
             # Compare the trajectories
-            T_video = [((True, False, False, True, False, True), 'act3'), ((True, False, True, False, False, True), 'act1'), ((False, True, True, False, False, True), 'act2'), ((False, True, True, False, True, False), 'act4'), ((False, True, False, True, True, False), 'act5'), ('Terminate', 'None')]
-            mdp.compare_trajectories(T, T_video)
+            # mdp.compare_trajectories(T, T_video)
+
+            # Check whether the video trajectory is the subset of all possible trajectories generated from the user-defined matrix
+            result = mdp.check_possible_policies(V, rewards, T_video)
+            if result == "correct":
+                print("CORRECT SPECIFICATION")
+            elif result == "underspecified":
+                print("UNDERSPECIFIED")
+            elif result == "misspecified":
+                print("MISSPECIFIED")
+
     # raise SystemExit(0)
     # '''
