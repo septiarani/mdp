@@ -16,7 +16,8 @@ class MDP(object):
         return self.init_state # returns the initial state of the MDP
 
     def get_state_hash(self, state):
-        return str(state) # returns a hashable representation (specifically a string) of a given state
+        unique_state_sort = sorted(list(state))
+        return str(unique_state_sort) # returns a hashable representation (specifically a string) of a given state
                           # this can be useful for storing states in data structures like dictionaries or sets
 
     def get_goal_states(self):
