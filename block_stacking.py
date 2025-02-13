@@ -118,7 +118,7 @@ if __name__ == '__main__':
         value_iteration(mdp, participant_id=participant_id)
         print("Participant ID: ", participant_id)
         correct_flag, underspecified_flag = test_specification(mdp, target_trajectory, participant_id=participant_id)
-        policy = get_policy(mdp)
+        policy = get_policy(mdp,participant_id=participant_id)
         policy_rollout = rollout_policy(mdp, policy, participant_id=participant_id)
         print("Policy Rollout: ", policy_rollout)
         if correct_flag:

@@ -35,7 +35,7 @@ class Navigation(MDP):
         # 3. Pick up the suitcase outside the room
         # 4. Dropoff the suitcase inside the room
         # 5. Exit the task.
-        return ['Open the door', 'Pick up the suitcase outside the room', 'Move to the room', 'Dropoff the suitcase inside the room', 'Exit the task']
+        return ['Open the door', 'Pick up the suitcase outside the room',  'Dropoff the suitcase inside the room', 'Exit the task']
 
     def generate_init_state(self):
         return set(['The door is closed', 'The robot is not holding the suitcase', 'The suitcase is outside the room'])
@@ -66,19 +66,19 @@ class Navigation(MDP):
                 expected_next_state = state | set(['task_complete'])
                 if expected_next_state == next_state:
                     return 1
-        elif action == 'Move to the room':
-            if 'The door is open' in state and 'The robot is holding the suitcase' in state and 'The suitcase is outside the room.' in state:
-                expected_next_state = (state - set(['The suitcase is outside the room.']))| set(['The suitcase is inside the room'])
-                if expected_next_state == next_state:
-                    return 1
-            # If precondition are not met the task should exit
-            else:
-                expected_next_state = state | set(['task_complete'])
-                if expected_next_state == next_state:
-                    return 1
+        # elif action == 'Move to the room':
+        #     if 'The door is open' in state and 'The robot is holding the suitcase' in state and 'The suitcase is outside the room.' in state:
+        #         expected_next_state = (state - set(['The suitcase is outside the room.']))| set(['The suitcase is inside the room'])
+        #         if expected_next_state == next_state:
+        #             return 1
+        #     # If precondition are not met the task should exit
+        #     else:
+        #         expected_next_state = state | set(['task_complete'])
+        #         if expected_next_state == next_state:
+        #             return 1
         elif action == 'Dropoff the suitcase inside the room':
-            if 'The door is open' in state and 'The robot is holding the suitcase' in state and 'The suitcase is inside the room' in state:
-                expected_next_state = (state - set(['The robot is holding the suitcase']))| set(['The robot is not holding the suitcase'])
+            if 'The door is open' in state and 'The robot is holding the suitcase' in state and 'The suitcase is outside the room' in state:
+                expected_next_state = (state - set(['The robot is holding the suitcase','The suitcase is outside the room']))| set(['The robot is not holding the suitcase','The suitcase is inside the room'])
                 if expected_next_state == next_state:
                     return 1
             # If precondition
@@ -112,7 +112,7 @@ class Navigation(MDP):
             # print(df.iloc[row_id, 212:240])
             # for col_id in range(212, 240):
             #     print("row_id: ", row_id, "column_id: ", col_id, "value: ", df.iloc[row_id, col_id])
-            all_rewards = df.iloc[row_id, 89:119].tolist()
+            all_rewards = df.iloc[row_id,  83:107].tolist()
             action_list = self.get_actions()
             fact_list = self.fact_list
             rewards_matrix = {act: {fact: 0 for fact in fact_list} for act in action_list}
@@ -125,13 +125,13 @@ class Navigation(MDP):
             self.all_reward_matrices.append(rewards_matrix)
 
 if __name__ == '__main__':
-    mdp = Navigation('4.0 Prolific - Goals vs Rewards - Specify Objective_February 7, 2025_13.32.xlsx')
-    target_trajectory = []
+    mdp = Navigation('Latest.xlsx')
+    target_trajectory = ['Pick up the suitcase outside the room', 'Open the door', 'Dropoff the suitcase inside the room', 'Exit the task']
     for participant_id in range(len(mdp.all_reward_matrices)):
         value_iteration(mdp, participant_id=participant_id)
         print("Participant ID: ", participant_id)
         correct_flag, underspecified_flag = test_specification(mdp, target_trajectory, participant_id=participant_id)
-        policy = get_policy(mdp)
+        policy = get_policy(mdp,participant_id=participant_id)
         policy_rollout = rollout_policy(mdp, policy, participant_id=participant_id)
         print("Policy Rollout: ", policy_rollout)
         if correct_flag:

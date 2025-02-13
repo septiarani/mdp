@@ -97,7 +97,7 @@ class SelfDriving(MDP):
             #print(df.iloc[row_id, 212:240])
             # for col_id in range(212, 240):
             #     print("row_id: ", row_id, "column_id: ", col_id, "value: ", df.iloc[row_id, col_id])
-            all_rewards = df.iloc[row_id, 328:352].tolist()
+            all_rewards = df.iloc[row_id, 316:340].tolist()
             print(len(all_rewards))
             print(all_rewards)
             action_list = self.get_actions()
@@ -113,13 +113,13 @@ class SelfDriving(MDP):
 
 
 if __name__ == '__main__':
-    mdp = SelfDriving('4.0 Prolific - Goals vs Rewards - Specify Objective_February 7, 2025_13.32.xlsx')
-    target_trajectory = []
+    mdp = SelfDriving('5.0 Prolific - Goals vs Rewards - Specify Objective_February 9, 2025_19.10.xlsx')
+    target_trajectory = ['Pick up the passenger from the initial position', 'Drop off the passenger at the drop-off location', 'Go to the battery charging station', 'Exit the task']
     for participant_id in range(len(mdp.all_reward_matrices)):
         value_iteration(mdp, participant_id=participant_id)
         print("Participant ID: ", participant_id)
         correct_flag, underspecified_flag = test_specification(mdp, target_trajectory, participant_id=participant_id)
-        policy = get_policy(mdp)
+        policy = get_policy(mdp,participant_id=participant_id)
         policy_rollout = rollout_policy(mdp, policy, participant_id=participant_id)
         print("Policy Rollout: ", policy_rollout)
         if correct_flag:
