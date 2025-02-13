@@ -98,7 +98,8 @@ class BlockStacking(MDP):
             #print(df.iloc[row_id, 212:240])
             # for col_id in range(212, 240):
             #     print("row_id: ", row_id, "column_id: ", col_id, "value: ", df.iloc[row_id, col_id])
-            all_rewards = df.iloc[row_id, 212:240].tolist()
+            # all_rewards = df.iloc[row_id, 212:240].tolist()
+            all_rewards = df.iloc[row_id, 200:228].tolist()
             action_list = self.get_actions()
             fact_list = self.fact_list
             rewards_matrix = {act: {fact: 0 for fact in fact_list} for act in action_list}
@@ -112,7 +113,8 @@ class BlockStacking(MDP):
 
 
 if __name__ == '__main__':
-    mdp = BlockStacking('4.0 Prolific - Goals vs Rewards - Specify Objective_February 7, 2025_13.32.xlsx')
+    # mdp = BlockStacking('4.0 Prolific - Goals vs Rewards - Specify Objective_February 7, 2025_13.32.xlsx')
+    mdp = BlockStacking('5.0 Prolific - Goals vs Rewards - Specify Objective_February 9, 2025_19.10.xlsx')
     target_trajectory = ['Swap A and B', 'Stack B on A', 'Exit the task']
     for participant_id in range(len(mdp.all_reward_matrices)):
         value_iteration(mdp, participant_id=participant_id)

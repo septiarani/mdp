@@ -81,8 +81,8 @@ class SelfDriving(MDP):
         total_reward = 0
         for fact in self.all_reward_matrices[participant_id][action]:
             if fact in state:
-                if self.all_reward_matrices[participant_id][action][fact] > 0:
-                    print("state: ", state, "action: ", action, "fact: ", fact, "reward: ", self.all_reward_matrices[participant_id][action][fact])
+                # if self.all_reward_matrices[participant_id][action][fact] > 0:
+                    # print("state: ", state, "action: ", action, "fact: ", fact, "reward: ", self.all_reward_matrices[participant_id][action][fact])
                 total_reward += self.all_reward_matrices[participant_id][action][fact]
         return total_reward
 
@@ -97,9 +97,10 @@ class SelfDriving(MDP):
             #print(df.iloc[row_id, 212:240])
             # for col_id in range(212, 240):
             #     print("row_id: ", row_id, "column_id: ", col_id, "value: ", df.iloc[row_id, col_id])
-            all_rewards = df.iloc[row_id, 328:352].tolist()
-            print(len(all_rewards))
-            print(all_rewards)
+            # all_rewards = df.iloc[row_id, 328:352].tolist()
+            all_rewards = df.iloc[row_id, 316:340].tolist()
+            # print(len(all_rewards))
+            # print(all_rewards)
             action_list = self.get_actions()
             fact_list = self.fact_list
             rewards_matrix = {act: {fact: 0 for fact in fact_list} for act in action_list}
@@ -113,8 +114,10 @@ class SelfDriving(MDP):
 
 
 if __name__ == '__main__':
-    mdp = SelfDriving('4.0 Prolific - Goals vs Rewards - Specify Objective_February 7, 2025_13.32.xlsx')
-    target_trajectory = []
+    # mdp = SelfDriving('4.0 Prolific - Goals vs Rewards - Specify Objective_February 7, 2025_13.32.xlsx')
+    mdp = SelfDriving('5.0 Prolific - Goals vs Rewards - Specify Objective_February 9, 2025_19.10.xlsx')
+    # target_trajectory = []
+    target_trajectory = ['Pick up the passenger from the initial position', 'Drop off the passenger at the drop-off location', 'Go to the battery charging station', 'Exit the task']
     for participant_id in range(len(mdp.all_reward_matrices)):
         value_iteration(mdp, participant_id=participant_id)
         print("Participant ID: ", participant_id)

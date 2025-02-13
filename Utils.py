@@ -88,7 +88,7 @@ def value_iteration(mdp, epsilon=0.001, participant_id=0):
             # for R(s, a, s')
             # V[s_hash] = max([mdp.discount * sum([mdp.get_transition_probability(s, a, s_prime) * (mdp.get_reward(s, a, s_prime) + V[mdp.get_state_hash(s_prime)]) for s_prime in mdp.get_state_space()]) for a in mdp.get_actions()])
             delta = max(delta, abs(v - mdp.V[participant_id][s_hash]))
-        print(delta)
+        # print(delta)
         if delta < epsilon:
             # self.delta = delta
             break
